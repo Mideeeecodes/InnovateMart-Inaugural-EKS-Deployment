@@ -1,0 +1,74 @@
+name: CI/CD Pipeline for Innovatemart EKS Deployment
+
+on:
+    push:
+        branches:
+            - main
+            - master
+            - feature/*
+    pull_request:
+
+
+jobs:
+    terraform:
+        runs-on: ubuntu-latest
+        env:
+            AWS_REGION: us-east-1
+
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                aws-region: ${{ env.AWS_REGION }}
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+            - name: Setup and download terraform
+              uses: hashicorp/setup-terraform@v3
+
+            - name: Terraform Init
+              run: terraform init
+
+            - name: Terraform plan
+              if: github.ref == 'refs/heads/feature/**'
+              run: terraform plan
+
+            - name: Terraform Apply
+              if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+              run: terraform apply -auto-approve
+
+            - name: Wait for EKS Cluster to be ready
+              if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+              run: |
+                echo "Waiting for the EKS Cluster to be ready.........."
+                aws eks wait cluster-active --name innovatemart-eks-cluster --region ${{ env.AWS_REGION}}
+                echo "EKS Cluster is now ready."
+            
+            - name: Install Kubectl
+              run: |
+                curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+                chmod +x kubectl
+                mkdir -p ~/.local/bin
+                mv ./kubectl ~/.local/bin/kubectl
+                kubectl version --client
+
+
+            - name: Update kubeconfig
+              if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+              run: |
+                aws eks update-kubeconfig --name innovatemart-eks-cluster --region ${{ env.AWS_REGION}}
+                sleep 60
+                kubectl get nodes
+                echo "Kubernetes access is configured........"
+
+            - name: Deploy the applications using Kubectl
+              if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+              run: | 
+                kubectl apply -f kubernetes.yaml
+                kubectl get pods
+                echo "Applications are deployed successfully........"
+

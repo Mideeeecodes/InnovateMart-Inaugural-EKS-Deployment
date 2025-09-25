@@ -1,0 +1,23 @@
+To Install Kubectl in the pipeline
+
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+                chmod +x kubectl
+                mkdir -p ~/.local/bin
+                mv ./kubectl ~/.local/bin/kubectl
+
+You must install kubectl on your PC before you can be able to access EKS from your command line
+
+
+To authenticate eks with your command line
+aws eks update-kubeconfig --name <yourclustername> --region <your-region>
+
+To apply the Kubernetes file
+kubectl apply -f <file.yaml>, in this case, it is kubectl apply -f Kubernetes.yaml
+
+
+kubectl get nodes ------- To view all the nodes
+kubectl get pods --------- To view all the pods
+kubectl get svc ----------- To view all the services
+kubectl logs <pod name> ---------To get pod's log (basically the pods log)
+kubectl describe <pod name> -------- To view information about the log
