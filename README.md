@@ -1,4 +1,4 @@
-#### Cloud Engineering Third Semester Assignment Project
+## Cloud Engineering Third Semester Assignment Project
 ## InnovateMart’s Inaugural EKS Deployment
 ## NAME: ODDI, MARYAM OLAMIDE
 ## ALT SCHOOL ID: ALT/SOE/024/1831
@@ -220,4 +220,3 @@ Your AWS user/role must have permissions for:
   - **RBAC**: Role-based access control boundaries
 - **Use Case**: Multi-tenancy, resource organization, security boundaries
 
-#### **Microservices Architecture**
